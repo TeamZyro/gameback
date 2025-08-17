@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt'); // For hashing passwords
 // We use 'node-fetch' to make HTTP requests to the other server.
 const fetch = require('node-fetch');
 const { MongoClient } = require('mongodb');
+const os = require("os");
  // import model
 
 
@@ -564,7 +565,18 @@ app.post('/login', async (req, res) => {
     }
 });
 
+function getLocalIP() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+}
 // Start the proxy server
 app.listen(PROXY_PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PROXY_PORT}`);
+  const ip = getLocalIP();
+  console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 });
