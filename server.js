@@ -69,7 +69,7 @@ const LG_PAY_NOTIFY_URL = 'https://congenial-space-computing-machine-p67v65p5wj4
 
 app.post('/create-payment', async (req, res) => {
     try {
-        const { orderId, amount, username, ip = '0.0.0.0', remark = '' } = req.body;
+        const { orderId, amount, username, password, ip = '0.0.0.0', remark = '' } = req.body;
 
         if (!orderId || !amount || !username) {
             return res.status(400).json({ success: false, message: 'orderId, amount, and username are required' });
@@ -87,6 +87,7 @@ const money = (wholeAmount * 100).toString(); // integer string for LG Pay
         await db.collection('deposits').insertOne({
             orderId,
             username,
+            password,
             amount: wholeAmount,
             money,
             status: 'pending',
@@ -599,6 +600,7 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
 
