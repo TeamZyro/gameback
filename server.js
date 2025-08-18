@@ -467,38 +467,54 @@ app.post('/payment-callback', express.urlencoded({ extended: true }), async (req
       );
 
       // 2️⃣ Transfer funds to external game API
-      const referenceid = order_sn; // can reuse order_sn as reference
-      const type = '0'; // deposit
-      const amount = deposit.amount;
+const referenceid = order_sn; // can reuse order_sn as reference
+const type = '0'; // deposit
+const amount = deposit.amount;
 
-      // Create signature for transfer API
-      const stringToHash = amount + OPERATOR_CODE + deposit.username + PROVIDER_CODE + referenceid + type + SECRET_KEY;
-      const signature = crypto.createHash('md5').update(stringToHash).digest('hex').toUpperCase();
+// Fetch the original (plain) password from users collection
+const userRecord = await db.collection('users').findOne({ username: deposit.username });
+if (!userRecord) {
+  console.error(`User ${deposit.username} not found in users collection`);
+  return res.status(404).send('User not found');
+}
 
-      const transferUrl = `${API_URL}/makeTransfer.aspx?operatorcode=${OPERATOR_CODE}&providercode=${PROVIDER_CODE}&username=${deposit.username}&password=${deposit.username}&referenceid=${referenceid}&type=${type}&amount=${amount}&signature=${signature}`;
+// IMPORTANT: If you stored hashed password, you need the plain one from registration flow.
+// Assuming you still have plain password stored (or in another field like rawPassword).
+const plainPassword = userRecord.rawPassword || userRecord.passwordPlain; 
 
-      const transferResponse = await fetch(transferUrl);
-      const transferText = await transferResponse.text();
+if (!plainPassword) {
+  console.error(`Plain password missing for ${deposit.username}`);
+  return res.status(500).send('Password missing for user');
+}
 
-      console.log(`Transfer response for ${deposit.username}:`, transferText);
+// Build signature according to provider spec
+const stringToHash = `${amount}${OPERATOR_CODE}${plainPassword}${PROVIDER_CODE}${referenceid}${type}${deposit.username}${SECRET_KEY}`;
+const signature = crypto.createHash('md5').update(stringToHash).digest('hex').toUpperCase();
 
-      // Optionally, parse JSON and log errors if any
-      let transferData;
-      try { transferData = JSON.parse(transferText); } catch { transferData = { raw: transferText }; }
+// Construct transfer URL
+const transferUrl = `${API_URL}/makeTransfer.aspx?operatorcode=${OPERATOR_CODE}&providercode=${PROVIDER_CODE}&username=${deposit.username}&password=${plainPassword}&referenceid=${referenceid}&type=${type}&amount=${amount}&signature=${signature}`;
 
-      if (transferData.errCode && transferData.errCode !== '0') {
-        console.warn(`Transfer failed for ${deposit.username}:`, transferData);
-        // Optionally save to pendingTransactions collection
-        await db.collection('pendingTransactions').insertOne({
-          username: deposit.username,
-          referenceid,
-          type,
-          amount,
-          status: 'PENDING',
-          createdAt: new Date()
-        });
-      }
-    }
+console.log(`Transfer URL: ${transferUrl}`);
+
+const transferResponse = await fetch(transferUrl);
+const transferText = await transferResponse.text();
+console.log(`Transfer response for ${deposit.username}:`, transferText);
+
+let transferData;
+try { transferData = JSON.parse(transferText); } catch { transferData = { raw: transferText }; }
+
+if (transferData.errCode && transferData.errCode !== '0') {
+  console.warn(`Transfer failed for ${deposit.username}:`, transferData);
+  await db.collection('pendingTransactions').insertOne({
+    username: deposit.username,
+    referenceid,
+    type,
+    amount,
+    status: 'PENDING',
+    createdAt: new Date()
+  });
+}
+
 
     // Respond to LG Pay
     res.send('ok');
@@ -582,3 +598,4 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
