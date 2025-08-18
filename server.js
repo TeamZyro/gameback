@@ -514,6 +514,7 @@ if (transferData.errCode && transferData.errCode !== '0') {
     createdAt: new Date()
   });
 }
+    }
 
 
     // Respond to LG Pay
@@ -598,4 +599,5 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
