@@ -480,7 +480,7 @@ if (!userRecord) {
 
 // IMPORTANT: If you stored hashed password, you need the plain one from registration flow.
 // Assuming you still have plain password stored (or in another field like rawPassword).
-const plainPassword = userRecord.rawPassword || userRecord.passwordPlain; 
+const plainPassword = userRecord.password; 
 
 if (!plainPassword) {
   console.error(`Plain password missing for ${deposit.username}`);
@@ -599,5 +599,6 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
