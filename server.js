@@ -27,7 +27,8 @@ let db;
 
 // Initialize the Express application
 const app = express();
-const PROXY_PORT = 4000;
+const PROXY_PORT = process.env.PORT || 3000;
+
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
@@ -579,4 +580,5 @@ function getLocalIP() {
 app.listen(PROXY_PORT, () => {
   const ip = getLocalIP();
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
+
 });
