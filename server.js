@@ -527,6 +527,29 @@ if (transferData.errCode && transferData.errCode !== '0') {
   }
 });
 
+// Agent endpoint: Get recent 50 transactions
+app.get('/agent/recent-transactions', async (req, res) => {
+  try {
+    // Fetch the latest 50 deposits sorted by createdAt (newest first)
+    const transactions = await db.collection('deposits')
+      .find({})
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+
+    res.json({
+      success: true,
+      count: transactions.length,
+      transactions
+    });
+  } catch (err) {
+    console.error('Error fetching recent transactions:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
 
 app.post('/login', async (req, res) => {
@@ -600,6 +623,7 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
 
