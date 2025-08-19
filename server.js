@@ -200,7 +200,7 @@ app.post('/register', async (req, res) => {
       await db.collection('users').insertOne({ 
           username, 
           email, 
-          password: hashedPassword, 
+          password: password, 
           createdAt: new Date() 
         });
         console.log(`User '${username}' saved to local database.`);
@@ -554,9 +554,9 @@ app.post('/login', async (req, res) => {
         }
 
         // 4. --- Compare the provided password with the stored hash ---
-        const isMatch = await bcrypt.compare(password, user.password);
+        // const isMatch = await bcrypt.compare(password, user.password);
 
-        if (!isMatch) {
+        if (password !== user.password) {
             // Passwords do not match
             return res.status(401).json({
                 success: false,
@@ -600,6 +600,7 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
 
