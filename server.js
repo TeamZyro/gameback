@@ -289,7 +289,7 @@ app.get('/balance', async (req, res) => {
 
 // GET Launch Game endpoint
 app.get('/launch-game', async (req, res) => {
-  const { username, password, type, gameid = '0', lang = 'en-US', html5 = '0', blimit = '' } = req.query;
+  const { username, password, type, provider_code, gameid = '0', lang = 'en-US', html5 = '0', blimit = '' } = req.query;
 
   // Validate required fields
   if (!username || !password || !type) {
@@ -301,13 +301,13 @@ app.get('/launch-game', async (req, res) => {
 
   try {
     // Create signature
-    const stringToHash = OPERATOR_CODE + password + PROVIDER_CODE + type + username + SECRET_KEY;
+    const stringToHash = OPERATOR_CODE + password + provider_code + type + username + SECRET_KEY;
     const signature = crypto.createHash('md5').update(stringToHash).digest('hex').toUpperCase();
 
     // Build API request URL
     const requestUrl =
       `${API_URL}/launchGames.aspx?operatorcode=${OPERATOR_CODE}` +
-      `&providercode=${PROVIDER_CODE}` +
+      `&providercode=${provider_code}` +
       `&username=${username}` +
       `&password=${password}` +
       `&type=${type}` +
@@ -623,6 +623,7 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
 
