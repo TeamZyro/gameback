@@ -67,6 +67,22 @@ const LG_PAY_NOTIFY_URL = 'https://congenial-space-computing-machine-p67v65p5wj4
 
 
 
+
+app.get("/makeTransfer", async (req, res) => {
+  const url = `https://gsmd.336699bet.com/makeTransfer.aspx?${new URLSearchParams(req.query)}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.text(); // API might return JSON or text
+    res.type("application/json").send(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+
 app.post('/create-payment', async (req, res) => {
     try {
         const { orderId, amount, username, password, ip = '0.0.0.0', remark = '' } = req.body;
@@ -623,6 +639,7 @@ app.listen(PROXY_PORT, () => {
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 
 });
+
 
 
 
