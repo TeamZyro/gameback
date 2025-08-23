@@ -401,6 +401,29 @@ if (transferData.errCode && transferData.errCode !== '0') {
 });
 
 
+// ✅ Fix: Use db.collection instead of Deposits.find
+app.get("/api/transactions/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // query MongoDB deposits collection
+    const transactions = await db.collection("deposits")
+      .find({ username })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json({
+      success: true,
+      count: transactions.length,
+      transactions,
+    });
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 
 // Agent endpoint: Get recent 50 transactions
 app.get('/agent/recent-transactions', async (req, res) => {
@@ -521,3 +544,4 @@ app.listen(PROXY_PORT, () => {
   const ip = getLocalIP();
   console.log(`Proxy server running on http://${ip}:${PROXY_PORT}`);
 });
+
